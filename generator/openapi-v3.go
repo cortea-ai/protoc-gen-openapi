@@ -545,6 +545,18 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 
 	// Create the response.
 	name, content := g.reflect.responseContentForMessage(outputMessage.Desc)
+
+	for _, field := range outputMessage.Fields {
+		if example := proto.GetExtension(field.Desc.Options(), open_api_extensions.E_Example).(string); example != "" {
+			var mtype *v3.MediaType
+			for _, namedMtype := range content.GetAdditionalProperties() {
+				if mtype = namedMtype.GetValue(); mtype != nil {
+					mtype.Example = &v3.Any{Yaml: example}
+				}
+			}
+		}
+	}
+
 	responses := &v3.Responses{
 		ResponseOrReference: []*v3.NamedResponseOrReference{
 			{

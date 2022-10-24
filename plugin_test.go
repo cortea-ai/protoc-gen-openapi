@@ -41,6 +41,7 @@ var openapiTests = []struct {
 	{name: "Validate", path: "examples/tests/validate/", protofile: "message.proto"},
 	{name: "Field behaviors", path: "examples/tests/fieldbehaviors/", protofile: "message.proto"},
 	{name: "Custom Params", path: "examples/tests/customparams/", protofile: "message.proto"},
+	{name: "Example Value", path: "examples/tests/examplevalue/", protofile: "message.proto"},
 }
 
 func TestOpenAPIProtobufNaming(t *testing.T) {
@@ -62,7 +63,7 @@ func TestOpenAPIProtobufNaming(t *testing.T) {
 				t.Fatalf("protoc failed: %+v", err)
 			}
 			// Verify that the generated spec matches our expected version.
-			diffArgs := []string{"-u", "--color", path.Join(tt.path, "openapi.yaml"), "openapi.yaml"}
+			diffArgs := []string{"-u", path.Join(tt.path, "openapi.yaml"), "openapi.yaml"}
 			output, err := exec.Command("diff", diffArgs...).CombinedOutput()
 			if err != nil {
 				fmt.Printf("Protoc output:\n%s\n", out)
@@ -92,7 +93,7 @@ func TestOpenAPIJSONNaming(t *testing.T) {
 			}
 
 			// Verify that the generated spec matches our expected version.
-			diffArgs := []string{"-u", "--color", path.Join(tt.path, "openapi_json.yaml"), "openapi.yaml"}
+			diffArgs := []string{"-u", path.Join(tt.path, "openapi_json.yaml"), "openapi.yaml"}
 			output, err := exec.Command("diff", diffArgs...).CombinedOutput()
 			if err != nil {
 				fmt.Printf("Protoc output:\n%s\n", out)

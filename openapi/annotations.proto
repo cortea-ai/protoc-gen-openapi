@@ -31,3 +31,7 @@ message Header {
     optional string pattern = 2;
     optional string description = 3;
 }
+
+extend google.protobuf.FieldOptions {
+    optional string example = 66703;
+}
