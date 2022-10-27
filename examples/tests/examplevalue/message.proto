@@ -31,6 +31,9 @@ service Messaging {
     }
 }
 message Message {
+    option (openapi.example) = "'{" 
+        '"text": "hello"'
+    "}'";
     string message_id = 1 ;
-    string text = 2 [(openapi.example) = "hello"];
+    string text = 2;
 }

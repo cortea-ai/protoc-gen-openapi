@@ -31,7 +31,7 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Message'
-                            example: hello
+                            example: '{"text": "hello"}'
                 default:
                     description: Default error response
                     content:

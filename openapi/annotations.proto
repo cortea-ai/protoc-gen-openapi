@@ -32,6 +32,6 @@ message Header {
     optional string description = 3;
 }
 
-extend google.protobuf.FieldOptions {
+extend google.protobuf.MessageOptions {
     optional string example = 66703;
 }
