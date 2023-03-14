@@ -877,6 +877,10 @@ func (g *OpenAPIv3Generator) addSchemasForMessagesToDocumentV3(d *v3.Document, m
 				}
 			}
 
+			if schema, ok := fieldSchema.Oneof.(*v3.SchemaOrReference_Reference); ok {
+				schema.Reference.Description = g.filterCommentString(field.Comments.Leading, true)
+			}
+
 			// Kolla
 			if *g.conf.Validate {
 				g.addValidationRules(fieldSchema, field.Desc)
