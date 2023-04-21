@@ -325,6 +325,7 @@ components:
                         type: object
                 value_type:
                     $ref: '#/components/schemas/GoogleProtobufValue'
+                    description: Description of value
                 repeated_value_type:
                     type: array
                     items:

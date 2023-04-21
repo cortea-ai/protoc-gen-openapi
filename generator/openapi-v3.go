@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -551,6 +553,21 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 		for _, namedMtype := range content.GetAdditionalProperties() {
 			if mtype = namedMtype.GetValue(); mtype != nil {
 				mtype.Example = &v3.Any{Yaml: example}
+			}
+		}
+	}
+
+	if exampleFromFile := proto.GetExtension(outputMessage.Desc.Options(), open_api_extensions.E_ExampleFromFile).(string); exampleFromFile != "" {
+		rootpath, _ := os.Getwd()
+		var mtype *v3.MediaType
+		for _, namedMtype := range content.GetAdditionalProperties() {
+			examplePath := filepath.Join(rootpath, exampleFromFile)
+			data, err := os.ReadFile(examplePath)
+			if err != nil {
+				log.Printf("failed to read %s: %s", examplePath, err.Error())
+			}
+			if mtype = namedMtype.GetValue(); mtype != nil {
+				mtype.Example = &v3.Any{Yaml: string(data)}
 			}
 		}
 	}

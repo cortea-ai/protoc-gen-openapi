@@ -34,4 +34,5 @@ message Header {
 
 extend google.protobuf.MessageOptions {
     optional string example = 66703;
+    optional string example_from_file = 66704;
 }
