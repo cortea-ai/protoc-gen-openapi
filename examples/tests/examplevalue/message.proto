@@ -23,14 +23,14 @@ import "openapi/annotations.proto";
 option go_package = "github.com/google/gnostic/apps/protoc-gen-openapi/examples/tests/example/message/v1;message";
 
 service Messaging {
-    rpc UpdateMessageV1(Message) returns(Message) {
+    rpc UpdateMessageV1(MessageV1Request) returns(MessageV1Response) {
         option(google.api.http) = {
             patch: "/v1/messages/{message_id}"
             body: "text"
         };
     }
 
-    rpc UpdateMessageV2(MessageTwo) returns(MessageTwo) {
+    rpc UpdateMessageV2(MessageV2Request) returns(MessageV2Response) {
         option(google.api.http) = {
             patch: "/v2/messages/{message_id}"
             body: "text"
@@ -38,13 +38,25 @@ service Messaging {
     }
 }
 
-message Message {
-    option (openapi.example) = '{"text": "hello"}';
+message MessageV1Request {
+    option (openapi.example) = '{"text": "hello request"}';
     string message_id = 1;
     string text = 2;
 }
 
-message MessageTwo {
+message MessageV1Response {
+    option (openapi.example) = '{"text": "hello response"}';
+    string message_id = 1;
+    string text = 2;
+}
+
+message MessageV2Request {
+    option (openapi.example_from_file) = 'examples/tests/examplevalue/message_two.json';
+    string message_id = 1 ;
+    string text = 2;
+}
+
+message MessageV2Response {
     option (openapi.example_from_file) = 'examples/tests/examplevalue/message_two.json';
     string message_id = 1 ;
     string text = 2;

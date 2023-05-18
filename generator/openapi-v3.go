@@ -31,6 +31,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	any_pb "google.golang.org/protobuf/types/known/anypb"
+	"gopkg.in/yaml.v3"
 
 	wk "github.com/google/gnostic/cmd/protoc-gen-openapi/generator/wellknown"
 	v3 "github.com/google/gnostic/openapiv3"
@@ -94,8 +95,8 @@ func (g *OpenAPIv3Generator) Run() error {
 		return fmt.Errorf("failed to marshal yaml: %s", err.Error())
 	}
 	outputFile := g.plugin.NewGeneratedFile("openapi.yaml", "")
-	outputFile.Write(bytes)
-	return nil
+	_, err = outputFile.Write(bytes)
+	return err
 }
 
 // buildDocumentV3 builds an OpenAPIv3 document for a plugin request.
@@ -391,6 +392,11 @@ func (g *OpenAPIv3Generator) _buildQueryParamsV3(field *protogen.Field, depths m
 	return parameters
 }
 
+type XCodeSample struct {
+	Lang   string `yaml:"lang"`
+	Source string `yaml:"source"`
+}
+
 // buildOperationV3 constructs an operation for a set of values.
 func (g *OpenAPIv3Generator) buildOperationV3(
 	d *v3.Document,
@@ -559,13 +565,10 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 
 	if exampleFromFile := proto.GetExtension(outputMessage.Desc.Options(), open_api_extensions.E_ExampleFromFile).(string); exampleFromFile != "" {
 		rootpath, _ := os.Getwd()
+		examplePath := filepath.Join(rootpath, exampleFromFile)
+		data, _ := os.ReadFile(examplePath)
 		var mtype *v3.MediaType
 		for _, namedMtype := range content.GetAdditionalProperties() {
-			examplePath := filepath.Join(rootpath, exampleFromFile)
-			data, err := os.ReadFile(examplePath)
-			if err != nil {
-				log.Printf("failed to read %s: %s", examplePath, err.Error())
-			}
 			if mtype = namedMtype.GetValue(); mtype != nil {
 				mtype.Example = &v3.Any{Yaml: string(data)}
 			}
@@ -666,6 +669,25 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 			}
 		}
 
+		example := proto.GetExtension(inputMessage.Desc.Options(), open_api_extensions.E_Example).(string)
+
+		if exampleFromFile := proto.GetExtension(inputMessage.Desc.Options(), open_api_extensions.E_ExampleFromFile).(string); exampleFromFile != "" {
+			rootpath, _ := os.Getwd()
+			examplePath := filepath.Join(rootpath, exampleFromFile)
+			data, err := os.ReadFile(examplePath)
+			example = string(data)
+			if err != nil {
+				log.Printf("failed to read %s: %s", examplePath, err.Error())
+			}
+		}
+
+		var exampleMsg *v3.Any
+		if example != "" {
+			exampleMsg = &v3.Any{Yaml: example}
+		} else {
+			exampleMsg = nil
+		}
+
 		op.RequestBody = &v3.RequestBodyOrReference{
 			Oneof: &v3.RequestBodyOrReference_RequestBody{
 				RequestBody: &v3.RequestBody{
@@ -675,7 +697,8 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 							{
 								Name: "application/json",
 								Value: &v3.MediaType{
-									Schema: requestSchema,
+									Schema:  requestSchema,
+									Example: exampleMsg,
 								},
 							},
 						},
@@ -683,6 +706,27 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 				},
 			},
 		}
+
+		// If a request example is provided, provide a code sample
+		specExt := []*v3.NamedAny{}
+		if example != "" {
+			curlCmd := fmt.Sprintf(`curl -H "Content-Type: application/json" -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://%s%s -d '%s'`,
+				defaultHost,
+				path,
+				example,
+			)
+			xcs := []XCodeSample{{
+				Lang:   "cURL",
+				Source: curlCmd,
+			}}
+			data, _ := yaml.Marshal(xcs)
+			specExt = append(specExt, &v3.NamedAny{
+				Name:  "x-codeSamples",
+				Value: &v3.Any{Yaml: string(data)},
+			})
+		}
+
+		op.SpecificationExtension = specExt
 	}
 	return op, path
 }
