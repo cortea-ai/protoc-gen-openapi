@@ -710,7 +710,9 @@ func (g *OpenAPIv3Generator) buildOperationV3(
 		// If a request example is provided, provide a code sample
 		specExt := []*v3.NamedAny{}
 		if example != "" {
-			curlCmd := fmt.Sprintf(`curl -H "Content-Type: application/json" -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://%s%s -d '%s'`,
+			curlCmd := fmt.Sprintf(`curl -H "Content-Type: application/json" -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://%s%s -d @- << EOF
+%s
+EOF`,
 				defaultHost,
 				path,
 				example,
